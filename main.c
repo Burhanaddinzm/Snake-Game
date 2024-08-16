@@ -1,18 +1,63 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <conio.h>
 #ifdef _WIN32
+#include <conio.h>
 #include <windows.h>
 #define SLEEP(ms) Sleep(ms)
 #define TERMINAL_CLEAR "cls"
 #else
 #include <unistd.h>
+#include <termios.h>
+#include <fcntl.h>
 #define SLEEP(ms) usleep(ms * 1000)
 #define TERMINAL_CLEAR "clear"
 #endif
 
 int i, j, height = 20, width = 20;
 int x, y, fruitx, fruity, flag, gameover, score, delay = 100;
+
+#ifdef __unix__
+// Linux (POSIX) equivalent functions
+int _kbhit(void)
+{
+    struct termios oldt, newt;
+    int ch;
+    int oldf;
+
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+
+    ch = getchar();
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    fcntl(STDIN_FILENO, F_SETFL, oldf);
+
+    if (ch != EOF)
+    {
+        ungetc(ch, stdin);
+        return 1;
+    }
+
+    return 0;
+}
+
+char _getch(void)
+{
+    struct termios oldt, newt;
+    char ch;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return ch;
+}
+#endif
 
 void draw()
 {
@@ -54,18 +99,23 @@ void input()
         switch (_getch())
         {
         case 'a':
+        case 'A':
             flag = 1;
             break;
         case 's':
+        case 'S':
             flag = 2;
             break;
         case 'd':
+        case 'D':
             flag = 3;
             break;
         case 'w':
+        case 'W':
             flag = 4;
             break;
         case 'x':
+        case 'X':
             gameover = 1;
             break;
         default:
