@@ -4,17 +4,19 @@
 #ifdef _WIN32
 #include <windows.h>
 #define SLEEP(ms) Sleep(ms)
+#define TERMINAL_CLEAR "cls"
 #else
 #include <unistd.h>
 #define SLEEP(ms) usleep(ms * 1000)
+#define TERMINAL_CLEAR "clear"
 #endif
 
 int i, j, height = 20, width = 20;
-int x, y, fruitx, fruity, flag, gameover, score;
+int x, y, fruitx, fruity, flag, gameover, score, delay = 100;
 
 void draw()
 {
-    system("cls");
+    system(TERMINAL_CLEAR);
     for (i = 0; i < height; i++)
     {
         for (j = 0; j < width; j++)
@@ -75,7 +77,7 @@ void input()
 void logic()
 {
     // Move the snake
-    SLEEP(100);
+    SLEEP(delay);
     switch (flag)
     {
     case 1:
@@ -104,6 +106,23 @@ void logic()
     if (x == fruitx && y == fruity)
     {
         score += 10;
+
+        if (score % 50 == 0)
+        {
+            // Increase the speed of the snake
+            if (delay >= 70)
+            {
+                delay--;
+            }
+
+            // Decrease the size of area
+            if (score >= 1500 && height >= 10 && width >= 10)
+            {
+                height--;
+                width--;
+            }
+        }
+
         // Generate new fruit position
         fruitx = rand() % (height - 2) + 1;
         fruity = rand() % (width - 2) + 1;
